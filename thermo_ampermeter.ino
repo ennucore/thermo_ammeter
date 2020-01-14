@@ -1,8 +1,24 @@
 #include <OneWire.h>
+/*#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+*/
 OneWire ds(2);
 float temps[100];
 int delta = 50;
+
+#define kilogram 1
+#define joule 1
+#define degree 1
+#define ampere 1
+#define volt 1
 
 
 float temperature() {
@@ -14,7 +30,7 @@ float temperature() {
   if ( !ds.search(addr)) {
     ds.reset_search();
     delay(250);
-    return;
+    return 0;
   }  
   ds.reset();
   ds.select(addr);
@@ -38,10 +54,28 @@ float temperature() {
   return temp;
 }
 
+
+float heatCapacity(float temp) {
+  return 200 * joule/degree; // todo
+}
+
+
+float resistance(float temp) {
+  return 1000 * volt/ampere; // todo
+}
+
+float heatLoss(float temp) {
+  return 0; // todo
+}
+
+
 void setup() {
   Serial.begin(9600);
+  /*display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.display();*/
   pinMode(A2, INPUT);
 }
+
 
 void loop() {
   float temp = temperature();
@@ -53,6 +87,10 @@ void loop() {
   delay(delta);
   Serial.print(temp);
   Serial.print(" ");
-  Serial.println(50*(temps[99]-temps[79])/delta);
-  // 
+  float temperatureDerivative = 50*(temps[99]-temps[79])/delta;
+  Serial.print(temperatureDerivative);
+  Serial.print(" ");
+  float current = sqrt((heatCapacity(temp)*temperatureDerivative + heatLoss(temp))/resistance(temp));
+  Serial.println(current);
+  // display.print(temp);
 }
